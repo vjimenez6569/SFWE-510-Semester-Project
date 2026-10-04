@@ -1,0 +1,54 @@
+Customer Service integration notes
+
+1. Add this module to the root pom.xml:
+   <module>customer-service</module>
+
+2. Add Config Server files:
+   customer-service.properties
+   customer-service-dev.properties
+   customer-service-prod.properties
+
+Suggested customer-service.properties:
+server.port=8083
+example.property=Customer Service
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+
+Suggested customer-service-dev.properties:
+spring.datasource.url=jdbc:postgresql://database:5432/ecommerce_customer_dev
+spring.datasource.username=postgres
+spring.datasource.password=pass
+
+Suggested customer-service-prod.properties:
+spring.datasource.url=jdbc:postgresql://database:5432/ecommerce_customer_prod
+spring.datasource.username=postgres
+spring.datasource.password=pass
+
+3. Create the PostgreSQL databases in docker/init.sql:
+   ecommerce_customer_dev
+   ecommerce_customer_prod
+
+4. Add a customer service to docker-compose.yml, exposing port 8083 and using:
+   SPRING_PROFILES_ACTIVE=dev
+   SPRING_CLOUD_CONFIG_URI=http://configserver:8071
+
+5. Build from the project root:
+   mvn clean package -DskipTests
+
+6. Test:
+   GET    http://localhost:8083/v1/customer
+   GET    http://localhost:8083/v1/customer/{customerId}
+   POST   http://localhost:8083/v1/customer
+   PUT    http://localhost:8083/v1/customer
+   DELETE http://localhost:8083/v1/customer/{customerId}
+
+Sample POST body:
+{
+  "firstName": "Victor",
+  "lastName": "Example",
+  "email": "victor@example.com",
+  "phoneNumber": "520-555-0100",
+  "address": "Tucson, AZ"
+}

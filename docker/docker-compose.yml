@@ -1,0 +1,106 @@
+version: '2.1'
+
+services:
+  database:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "pass"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./data.sql:/docker-entrypoint-initdb.d/2-data.sql
+    networks:
+      backend:
+        aliases:
+          - "database"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  configserver:
+    build:
+      context: ../configserver
+      args:
+        JAR_FILE: target/configserver-0.0.1-SNAPSHOT.jar
+    image: ecommerce/configserver:0.0.1-SNAPSHOT
+    ports:
+      - "8071:8071"
+    environment:
+      SERVER_PORT: "8071"
+      ENCRYPT_KEY: "ecommercePhase1ConfigKey"
+    networks:
+      backend:
+        aliases:
+          - "configserver"
+
+  productservice:
+    build:
+      context: ../product-service
+      args:
+        JAR_FILE: target/product-service-0.0.1-SNAPSHOT.jar
+    image: ecommerce/product-service:0.0.1-SNAPSHOT
+    environment:
+      SPRING_PROFILES_ACTIVE: "dev"
+      SPRING_CLOUD_CONFIG_URI: "http://configserver:8071"
+      CONFIGSERVER_PORT: "8071"
+      DATABASESERVER_PORT: "5432"
+    depends_on:
+      database:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - "8081:8081"
+    networks:
+      - backend
+
+  orderservice:
+    build:
+      context: ../order-service
+      args:
+        JAR_FILE: target/order-service-0.0.1-SNAPSHOT.jar
+    image: ecommerce/order-service:0.0.1-SNAPSHOT
+    environment:
+      SPRING_PROFILES_ACTIVE: "dev"
+      SPRING_CLOUD_CONFIG_URI: "http://configserver:8071"
+      CONFIGSERVER_PORT: "8071"
+      DATABASESERVER_PORT: "5432"
+    depends_on:
+      database:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - "8082:8082"
+    networks:
+      - backend
+
+  customer-service:
+    build:
+      context: ../customer-service
+      args:
+        JAR_FILE: target/customer-service-0.0.1-SNAPSHOT.jar
+    image: ecommerce/customer-service:0.0.1-SNAPSHOT
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CLOUD_CONFIG_URI: http://configserver:8071
+      CONFIGSERVER_PORT: "8071"
+      DATABASESERVER_PORT: "5432"
+    depends_on:
+      database:
+        condition: service_healthy
+      configserver:
+        condition: service_started
+    ports:
+      - "8083:8083"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
