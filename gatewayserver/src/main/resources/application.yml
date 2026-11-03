@@ -1,0 +1,39 @@
+server:
+  port: 8072
+spring:
+  application:
+    name: gatewayserver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/ecommerce}
+          jwk-set-uri: ${JWT_JWK_URI:http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs}
+  cloud:
+    gateway:
+      routes:
+        - id: products
+          uri: lb://product-service
+          predicates:
+            - Path=/v1/product/**
+        - id: orders
+          uri: lb://order-service
+          predicates:
+            - Path=/v1/order/**
+        - id: customers
+          uri: lb://customer-service
+          predicates:
+            - Path=/v1/customer/**
+        - id: identity
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/auth/**
+          filters:
+            - RewritePath=/auth/(?<segment>.*), /${segment}
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eurekaserver:8070/eureka/
+  instance:
+    prefer-ip-address: true
+# Override via container environment for the actual security settings.

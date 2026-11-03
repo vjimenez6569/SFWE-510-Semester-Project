@@ -1,0 +1,133 @@
+{
+  "realm": "ecommerce",
+  "enabled": true,
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "verifyEmail": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "CUSTOMER",
+        "description": "Standard ecommerce customer",
+        "composite": true,
+        "composites": {
+          "client": {
+            "ecommerce-project": [
+              "VIEW_PRODUCTS",
+              "PLACE_ORDERS",
+              "VIEW_OWN_ORDERS",
+              "MANAGE_OWN_PROFILE"
+            ]
+          }
+        }
+      },
+      {
+        "name": "ADMIN",
+        "description": "Ecommerce administrator",
+        "composite": true,
+        "composites": {
+          "client": {
+            "ecommerce-project": [
+              "MANAGE_PRODUCTS",
+              "MANAGE_ORDERS",
+              "MANAGE_CUSTOMERS"
+            ]
+          }
+        }
+      }
+    ],
+    "client": {
+      "ecommerce-project": [
+        {
+          "name": "VIEW_PRODUCTS"
+        },
+        {
+          "name": "PLACE_ORDERS"
+        },
+        {
+          "name": "VIEW_OWN_ORDERS"
+        },
+        {
+          "name": "MANAGE_OWN_PROFILE"
+        },
+        {
+          "name": "MANAGE_PRODUCTS"
+        },
+        {
+          "name": "MANAGE_ORDERS"
+        },
+        {
+          "name": "MANAGE_CUSTOMERS"
+        }
+      ]
+    }
+  },
+  "defaultRoles": [
+    "CUSTOMER"
+  ],
+  "clients": [
+    {
+      "clientId": "ecommerce-project",
+      "name": "Ecommerce Semester Project",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://oauth.pstmn.io/v1/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo-admin",
+      "enabled": true,
+      "email": "admin@example.test",
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demoadmin1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN",
+        "CUSTOMER"
+      ]
+    },
+    {
+      "username": "demo-customer",
+      "enabled": true,
+      "email": "customer@example.test",
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Customer",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Democustomer1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CUSTOMER"
+      ]
+    }
+  ],
+  "accessTokenLifespan": 900
+}

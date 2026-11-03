@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Wynter | E-Commerce</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+    <header><a class="logo" href="/">❄ WYNTER <small>MARKET</small></a>
+        <nav>
+            <button data-tab="shop" class="tab active">Shop</button>
+            <button data-tab="orders" class="tab">My orders</button>
+            <button data-tab="profile" class="tab">My profile</button>
+            <button data-tab="admin" class="tab" id="adminNav" hidden>Manage Inventory</button>
+            <button data-tab="manageOrders" class="tab" id="manageOrdersNav" hidden>Manage Orders</button>
+        </nav>
+        <div class="account">
+            <span id="identity">Guest</span>
+            <button id="login" class="primary">Sign in</button>
+            <button id="logout" hidden>Sign out</button>
+        </div>
+    </header>
+    <main>
+        <section class="hero" id="shopHero">
+            <div>
+                <div class="eyebrow">SFWE 510 · CLOUD-NATIVE COMMERCE PROJECT</div>
+                <h1>Everything you need.<br><em>Nothing you don't.</em></h1>
+                <p>Explore our curated tech essentials. Secure checkout powered by Keycloak, Spring Cloud Gateway, and
+                    independent microservices.</p>
+                <div class="hero-actions"><button id="browse" class="primary">Explore products</button><button
+                        id="register">Create an account</button></div>
+            </div>
+            <div class="hero-art">
+                <div class="art-orb">❄</div>
+                <div class="art-label">THE EVERYDAY EDIT <span>01 / 03</span></div>
+            </div>
+        </section>
+        <section id="shop" class="panel">
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">CURATED FOR YOU</div>
+                    <h2>Shop the collection</h2>
+                </div><span id="catalogStatus" class="muted">Loading products…</span>
+            </div>
+            <div class="filter-bar"><label for="categoryFilter">Category</label><select id="categoryFilter"><option value="">All categories</option></select></div>
+            <div id="products" class="product-grid"></div>
+        </section>
+        <section id="orders" class="panel" hidden>
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">YOUR PURCHASES</div>
+                    <h2>Order history</h2>
+                </div><button id="reloadOrders">Refresh</button>
+            </div>
+            <div id="ordersList"></div>
+        </section>
+        <section id="profile" class="panel" hidden>
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">ACCOUNT DETAILS</div>
+                    <h2>My profile</h2>
+                </div>
+            </div>
+            <form id="profileForm" class="form-grid"><label>First name<input name="firstName"
+                        required></label><label>Last name<input name="lastName" required></label><label>Email<input
+                        name="email" disabled></label><label>Phone number<input name="phoneNumber"></label><label
+                    class="wide">Shipping address<textarea name="address" rows="3"></textarea></label><button
+                    class="primary" type="submit">Save profile</button></form>
+        </section>
+        <section id="admin" class="panel" hidden>
+            <div class="section-heading">
+                <div>
+                    <div class="eyebrow">ROLE-RESTRICTED</div>
+                    <h2>Manage Inventory</h2>
+                </div><span class="chip">MANAGE_PRODUCTS</span>
+            </div>
+            <form id="productForm" class="form-grid"><input name="productId" type="hidden"><label>Product name<input
+                        name="productName" required></label><label>Category<select name="category" required>
+                        <option value="">Select category</option>
+                        <option>Electronics</option><option>Computers</option><option>Gaming</option>
+                        <option>Accessories</option><option>Audio</option><option>Home &amp; Office</option>
+                        <option>Clothing</option><option>Books</option><option>Other</option>
+                    </select></label><label>Price ($)<input name="price" type="number" min="0.01"
+                        step="0.01" required></label><label>Stock<input name="quantity" type="number" min="0" step="1"
+                        required></label><label class="wide">Description<textarea name="description"></textarea></label>
+                <div class="wide action-row"><button class="primary" type="submit">Save product</button><button
+                        type="button" id="resetProduct">Clear form</button></div>
+            </form>
+            <h3>Inventory</h3>
+            <div id="adminProducts"></div>
+
+        </section>
+        <section id="manageOrders" class="panel" hidden>
+            <div class="section-heading">
+                <div><div class="eyebrow">ADMINISTRATION</div><h2>Manage Orders</h2></div>
+                <button id="refreshAdminOrders">Refresh orders</button>
+            </div>
+            <div class="filter-bar">
+                <label for="customerIdFilter">Filter by customer ID</label>
+                <input id="customerIdFilter" type="search" placeholder="Enter all or part of a customer ID">
+                <button id="clearCustomerFilter" type="button">Clear</button>
+            </div>
+            <div id="adminOrders"></div>
+        </section>
+    </main>
+    <aside id="cart" class="cart">
+        <div class="cart-head">
+            <h3>Your bag <span id="cartCount">0</span></h3><button id="closeCart" aria-label="Close cart">✕</button>
+        </div>
+        <div id="cartItems"></div>
+        <div class="cart-foot">
+            <div class="total"><span>Subtotal</span><strong id="cartTotal">$0.00</strong></div><button
+                class="primary full" id="checkout">Place order</button><small>Sign in to check out securely.</small>
+        </div>
+    </aside><button class="cart-fab" id="openCart">Bag <span id="bagCount">0</span></button>
+    <div class="toast" id="toast" role="status"></div>
+    <footer>© 2026 NORTHSTAR MARKET · Built for SFWE 510 · Spring Boot + Keycloak</footer>
+    <script src="/app.js" defer></script>
+</body>
+
+</html>

@@ -7,3 +7,6 @@ spring:
 
   config:
     import: optional:configserver:${SPRING_CLOUD_CONFIG_URI:http://localhost:8071}
+inventory:
+  internal:
+    secret: ${INVENTORY_INTERNAL_SECRET:local-demo-inventory-secret-change-me}
