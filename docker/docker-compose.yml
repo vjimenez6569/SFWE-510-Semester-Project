@@ -1,106 +1,132 @@
-version: '2.1'
-
 services:
   database:
-    image: postgres:latest
-    ports:
-      - "5432:5432"
+    image: postgres:14
     environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "pass"
-      POSTGRES_DB: "postgres"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
-      - ./data.sql:/docker-entrypoint-initdb.d/2-data.sql
-    networks:
-      backend:
-        aliases:
-          - "database"
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql:ro
+      - ./data.sql:/docker-entrypoint-initdb.d/2-data.sql:ro
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 15
   configserver:
+    image: ecommerce/configserver:0.0.1-SNAPSHOT
     build:
       context: ../configserver
       args:
         JAR_FILE: target/configserver-0.0.1-SNAPSHOT.jar
-    image: ecommerce/configserver:0.0.1-SNAPSHOT
+    environment:
+      ENCRYPT_KEY: ecommercePhase1ConfigKey
     ports:
       - "8071:8071"
-    environment:
-      SERVER_PORT: "8071"
-      ENCRYPT_KEY: "ecommercePhase1ConfigKey"
-    networks:
-      backend:
-        aliases:
-          - "configserver"
+  eurekaserver:
+    image: ecommerce/eurekaserver:0.0.1-SNAPSHOT
+    build:
+      context: ../eurekaserver
+      args:
+        JAR_FILE: target/eurekaserver-0.0.1-SNAPSHOT.jar
+    ports:
+      - "8073:8070"
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    command:
+      - start-dev
+      - --import-realm
+      - --hostname=http://localhost:8080
+      - --hostname-strict=false
+    environment:
+      KEYCLOAK_ADMIN: Admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+    volumes:
+      - ./keycloak/wyntermarket-realm.json:/opt/keycloak/data/import/wyntermarket-realm.json:ro
+    ports:
+      - "8080:8080"
+
+  keycloak-smtp-init:
+    image: quay.io/keycloak/keycloak:25.0.6
+    entrypoint: ["/bin/sh", "/scripts/configure-smtp.sh"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-Admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_ADMIN_EMAIL: ${KEYCLOAK_ADMIN_EMAIL}
+      GMAIL_SMTP_PASSWORD: ${GMAIL_SMTP_PASSWORD}
+    volumes:
+      - ./keycloak/configure-smtp.sh:/scripts/configure-smtp.sh:ro
+    depends_on:
+      - keycloak
+    restart: "no"
+
+  gatewayserver:
+    image: ecommerce/gatewayserver:0.0.1-SNAPSHOT
+    build:
+      context: ../gatewayserver
+      args:
+        JAR_FILE: target/gatewayserver-0.0.1-SNAPSHOT.jar
+    environment: &jwt
+      JWT_ISSUER_URI: http://localhost:8080/realms/wyntermarket
+      JWT_JWK_URI: http://keycloak:8080/realms/wyntermarket/protocol/openid-connect/certs
+    depends_on:
+      eurekaserver:
+        condition: service_started
+      keycloak-smtp-init:
+        condition: service_completed_successfully
+    ports:
+      - "8072:8072"
   productservice:
+    image: ecommerce/productservice:0.0.1-SNAPSHOT
     build:
       context: ../product-service
       args:
         JAR_FILE: target/product-service-0.0.1-SNAPSHOT.jar
-    image: ecommerce/product-service:0.0.1-SNAPSHOT
     environment:
-      SPRING_PROFILES_ACTIVE: "dev"
-      SPRING_CLOUD_CONFIG_URI: "http://configserver:8071"
-      CONFIGSERVER_PORT: "8071"
-      DATABASESERVER_PORT: "5432"
+      <<: *jwt
+      INVENTORY_INTERNAL_SECRET: ${INVENTORY_INTERNAL_SECRET:-local-demo-inventory-secret-change-me}
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CLOUD_CONFIG_URI: http://configserver:8071
     depends_on:
-      database:
-        condition: service_healthy
-      configserver:
-        condition: service_started
-    ports:
-      - "8081:8081"
-    networks:
-      - backend
-
+      database: {condition: service_healthy}
+      configserver: {condition: service_started}
+      eurekaserver: {condition: service_started}
   orderservice:
+    image: ecommerce/orderservice:0.0.1-SNAPSHOT
     build:
       context: ../order-service
       args:
         JAR_FILE: target/order-service-0.0.1-SNAPSHOT.jar
-    image: ecommerce/order-service:0.0.1-SNAPSHOT
     environment:
-      SPRING_PROFILES_ACTIVE: "dev"
-      SPRING_CLOUD_CONFIG_URI: "http://configserver:8071"
-      CONFIGSERVER_PORT: "8071"
-      DATABASESERVER_PORT: "5432"
+      <<: *jwt
+      INVENTORY_INTERNAL_SECRET: ${INVENTORY_INTERNAL_SECRET:-local-demo-inventory-secret-change-me}
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_CLOUD_CONFIG_URI: http://configserver:8071
     depends_on:
-      database:
-        condition: service_healthy
-      configserver:
-        condition: service_started
-    ports:
-      - "8082:8082"
-    networks:
-      - backend
-
+      database: {condition: service_healthy}
+      configserver: {condition: service_started}
+      eurekaserver: {condition: service_started}
   customer-service:
+    image: ecommerce/customerservice:0.0.1-SNAPSHOT
     build:
       context: ../customer-service
       args:
         JAR_FILE: target/customer-service-0.0.1-SNAPSHOT.jar
-    image: ecommerce/customer-service:0.0.1-SNAPSHOT
     environment:
+      <<: *jwt
+      INVENTORY_INTERNAL_SECRET: ${INVENTORY_INTERNAL_SECRET:-local-demo-inventory-secret-change-me}
       SPRING_PROFILES_ACTIVE: dev
       SPRING_CLOUD_CONFIG_URI: http://configserver:8071
-      CONFIGSERVER_PORT: "8071"
-      DATABASESERVER_PORT: "5432"
     depends_on:
-      database:
-        condition: service_healthy
-      configserver:
-        condition: service_started
-    ports:
-      - "8083:8083"
-    networks:
-      - backend
+      database: {condition: service_healthy}
+      configserver: {condition: service_started}
+      eurekaserver: {condition: service_started}
 
-networks:
-  backend:
-    driver: bridge
+  frontend:
+    image: nginx:1.27-alpine
+    volumes:
+      - ../frontend:/usr/share/nginx/html:ro
+      - ../frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [gatewayserver]
+    ports:
+      - "3000:80"

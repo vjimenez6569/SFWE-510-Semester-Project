@@ -17,22 +17,22 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-@Table(name="products")
+@Table(name = "products")
 public class Product extends RepresentationModel<Product> {
 
     @Id
-    @Column(name="product_id", nullable=false)
+    @Column(name = "product_id", nullable = false)
     private String productId;
 
-    @Column(name="product_name", nullable=false)
+    @Column(name = "product_name", nullable = false)
     private String productName;
 
     private String description;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private BigDecimal price;
 
-    @Column(nullable=false)
+    @Column(nullable = false)
     private Integer quantity;
 
     private String category;

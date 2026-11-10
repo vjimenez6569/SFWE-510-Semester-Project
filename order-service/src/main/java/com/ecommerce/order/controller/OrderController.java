@@ -1,62 +1,58 @@
 package com.ecommerce.order.controller;
 
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.ecommerce.order.model.CustomerOrder;
 import com.ecommerce.order.service.OrderService;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
-@RequestMapping(value="v1/order")
+@RequestMapping("/v1/order")
 public class OrderController {
+    private final OrderService service;
 
-    @Autowired
-    private OrderService orderService;
-
-    @RequestMapping(method = RequestMethod.GET)
-    public ResponseEntity<List<CustomerOrder>> getOrders() {
-        return ResponseEntity.ok(orderService.getOrders());
+    public OrderController(OrderService service) {
+        this.service = service;
     }
 
-    @RequestMapping(value="/{orderId}", method = RequestMethod.GET)
-    public ResponseEntity<CustomerOrder> getOrder(@PathVariable("orderId") String orderId) {
-        CustomerOrder order = orderService.getOrder(orderId);
-
-        order.add(
-                linkTo(methodOn(OrderController.class).getOrder(order.getOrderId())).withSelfRel(),
-                linkTo(methodOn(OrderController.class).createOrder(order)).withRel("createOrder"),
-                linkTo(methodOn(OrderController.class).updateOrder(order)).withRel("updateOrder"),
-                linkTo(methodOn(OrderController.class).deleteOrder(order.getOrderId())).withRel("deleteOrder")
-        );
-
-        return ResponseEntity.ok(order);
+    @PreAuthorize("hasAuthority('VIEW_OWN_ORDERS') or hasAuthority('MANAGE_ORDERS')")
+    @GetMapping
+    public List<CustomerOrder> list(@AuthenticationPrincipal Jwt jwt) {
+        return service.listFor(jwt);
     }
 
+    @PreAuthorize("hasAuthority('VIEW_OWN_ORDERS') or hasAuthority('MANAGE_ORDERS')")
+    @GetMapping("/{id}")
+    public CustomerOrder get(@PathVariable String id, @AuthenticationPrincipal Jwt jwt) {
+        return service.getFor(id, jwt);
+    }
+
+    @PreAuthorize("hasAuthority('PLACE_ORDERS')")
     @PostMapping
-    public ResponseEntity<CustomerOrder> createOrder(@RequestBody CustomerOrder request) {
-        return ResponseEntity.ok(orderService.createOrder(request));
+    public CustomerOrder create(@RequestBody CustomerOrder order, @RequestHeader("Authorization") String token,
+            @AuthenticationPrincipal Jwt jwt) {
+        return service.createFor(order, token, jwt);
     }
 
+    @PreAuthorize("hasAuthority('MANAGE_ORDERS')")
+    @PatchMapping("/{id}/status")
+    public CustomerOrder changeStatus(@PathVariable String id, @RequestBody java.util.Map<String, String> body) {
+        return service.changeStatus(id, body.get("status"));
+    }
+
+    @PreAuthorize("hasAuthority('MANAGE_ORDERS')")
     @PutMapping
-    public ResponseEntity<CustomerOrder> updateOrder(@RequestBody CustomerOrder request) {
-        return ResponseEntity.ok(orderService.updateOrder(request));
+    public CustomerOrder update(@RequestBody CustomerOrder order) {
+        return service.updateOrder(order);
     }
 
-    @DeleteMapping(value="/{orderId}")
-    public ResponseEntity<String> deleteOrder(@PathVariable("orderId") String orderId) {
-        return ResponseEntity.ok(orderService.deleteOrder(orderId));
+    @PreAuthorize("hasAuthority('MANAGE_ORDERS')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable String id) {
+        service.deleteOrder(id);
+        return ResponseEntity.noContent().build();
     }
 }

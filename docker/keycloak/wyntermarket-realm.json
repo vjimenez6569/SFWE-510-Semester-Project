@@ -1,0 +1,161 @@
+
+{
+  "realm": "wyntermarket",
+  "enabled": true,
+  "displayName": "Wynter Market",
+  "displayNameHtml": "Wynter Market",
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "eventsEnabled": true,
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "REGISTER",
+    "REGISTER_ERROR",
+    "SEND_RESET_PASSWORD",
+    "SEND_RESET_PASSWORD_ERROR",
+    "RESET_PASSWORD",
+    "RESET_PASSWORD_ERROR"
+  ],
+  "eventsExpiration": 86400,
+  "loginWithEmailAllowed": true,
+  "verifyEmail": false,
+  "smtpServer": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "from": "wynter.marketplace@gmail.com",
+    "fromDisplayName": "Wynter Market",
+    "replyTo": "wynter.marketplace@gmail.com",
+    "replyToDisplayName": "Wynter Market Support",
+    "auth": "true",
+    "ssl": "false",
+    "starttls": "true",
+    "user": "wynter.marketplace@gmail.com",
+    "password": ""
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "CUSTOMER",
+        "description": "Standard ecommerce customer",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wyntermarket-project": [
+              "VIEW_PRODUCTS",
+              "PLACE_ORDERS",
+              "VIEW_OWN_ORDERS",
+              "MANAGE_OWN_PROFILE"
+            ]
+          }
+        }
+      },
+      {
+        "name": "ADMIN",
+        "description": "Wynter Market Administrator",
+        "composite": true,
+        "composites": {
+          "client": {
+            "wyntermarket-project": [
+              "MANAGE_PRODUCTS",
+              "MANAGE_ORDERS",
+              "MANAGE_CUSTOMERS"
+            ]
+          }
+        }
+      }
+    ],
+    "client": {
+      "wyntermarket-project": [
+        {
+          "name": "VIEW_PRODUCTS"
+        },
+        {
+          "name": "PLACE_ORDERS"
+        },
+        {
+          "name": "VIEW_OWN_ORDERS"
+        },
+        {
+          "name": "MANAGE_OWN_PROFILE"
+        },
+        {
+          "name": "MANAGE_PRODUCTS"
+        },
+        {
+          "name": "MANAGE_ORDERS"
+        },
+        {
+          "name": "MANAGE_CUSTOMERS"
+        }
+      ]
+    }
+  },
+  "defaultRoles": [
+    "CUSTOMER"
+  ],
+  "clients": [
+    {
+      "clientId": "wyntermarket-project",
+      "name": "Wynter Market",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "https://oauth.pstmn.io/v1/callback"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "fullScopeAllowed": true,
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo-admin",
+      "enabled": true,
+      "email": "vjimenezgranados@arizona.edu",
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Admin",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demoadmin1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN",
+        "CUSTOMER"
+      ]
+    },
+    {
+      "username": "demo-customer",
+      "enabled": true,
+      "email": "customer@example.test",
+      "emailVerified": true,
+      "firstName": "Demo",
+      "lastName": "Customer",
+      "requiredActions": [],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Democustomer1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "CUSTOMER"
+      ]
+    }
+  ],
+  "accessTokenLifespan": 900
+}
