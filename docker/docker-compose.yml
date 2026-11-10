@@ -39,12 +39,26 @@ services:
       - --hostname=http://localhost:8080
       - --hostname-strict=false
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
+      KEYCLOAK_ADMIN: Admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
     volumes:
-      - ./keycloak/ecommerce-realm.json:/opt/keycloak/data/import/ecommerce-realm.json:ro
+      - ./keycloak/wyntermarket-realm.json:/opt/keycloak/data/import/wyntermarket-realm.json:ro
     ports:
       - "8080:8080"
+
+  keycloak-smtp-init:
+    image: quay.io/keycloak/keycloak:25.0.6
+    entrypoint: ["/bin/sh", "/scripts/configure-smtp.sh"]
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-Admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_ADMIN_EMAIL: ${KEYCLOAK_ADMIN_EMAIL}
+      GMAIL_SMTP_PASSWORD: ${GMAIL_SMTP_PASSWORD}
+    volumes:
+      - ./keycloak/configure-smtp.sh:/scripts/configure-smtp.sh:ro
+    depends_on:
+      - keycloak
+    restart: "no"
 
   gatewayserver:
     image: ecommerce/gatewayserver:0.0.1-SNAPSHOT
@@ -53,9 +67,13 @@ services:
       args:
         JAR_FILE: target/gatewayserver-0.0.1-SNAPSHOT.jar
     environment: &jwt
-      JWT_ISSUER_URI: http://localhost:8080/realms/ecommerce
-      JWT_JWK_URI: http://keycloak:8080/realms/ecommerce/protocol/openid-connect/certs
-    depends_on: [eurekaserver, keycloak]
+      JWT_ISSUER_URI: http://localhost:8080/realms/wyntermarket
+      JWT_JWK_URI: http://keycloak:8080/realms/wyntermarket/protocol/openid-connect/certs
+    depends_on:
+      eurekaserver:
+        condition: service_started
+      keycloak-smtp-init:
+        condition: service_completed_successfully
     ports:
       - "8072:8072"
   productservice:

@@ -52,15 +52,17 @@ public class ProductService {
     }
 
     @Transactional
-    public void changeStock(Map<String,Integer> quantities, boolean restore) {
+    public void changeStock(Map<String, Integer> quantities, boolean restore) {
         // Sorted locking order reduces deadlock risk across concurrent checkouts.
         for (var entry : new TreeMap<>(quantities).entrySet()) {
             int requested = entry.getValue();
-            if (requested <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid quantity");
-            Product product = productRepository.lockById(entry.getKey()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.CONFLICT, "Product no longer available"));
+            if (requested <= 0)
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid quantity");
+            Product product = productRepository.lockById(entry.getKey())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "Product no longer available"));
             if (!restore && product.getQuantity() < requested)
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient inventory for " + product.getProductName());
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Insufficient inventory for " + product.getProductName());
             product.setQuantity(product.getQuantity() + (restore ? requested : -requested));
             productRepository.save(product);
         }

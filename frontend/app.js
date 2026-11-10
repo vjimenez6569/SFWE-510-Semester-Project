@@ -2,8 +2,8 @@
 // E-Commerce Semester Project - Frontend JavaScript
 // Handles login, products, shopping cart, orders, and the admin page.
 
-const KEYCLOAK_URL = 'http://localhost:8080/realms/ecommerce';
-const CLIENT_ID = 'ecommerce-project';
+const KEYCLOAK_URL = 'http://localhost:8080/realms/wyntermarket';
+const CLIENT_ID = 'wyntermarket-project';
 const REDIRECT_URL = window.location.origin + '/';
 
 const $ = (id) => document.getElementById(id);

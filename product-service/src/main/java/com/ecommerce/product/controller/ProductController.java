@@ -26,7 +26,7 @@ import com.ecommerce.product.model.Product;
 import com.ecommerce.product.service.ProductService;
 
 @RestController
-@RequestMapping(value="v1/product")
+@RequestMapping(value = "v1/product")
 public class ProductController {
 
     @Autowired
@@ -43,28 +43,27 @@ public class ProductController {
     }
 
     @PostMapping("/internal/reserve")
-    public ResponseEntity<Void> reserve(@RequestHeader(value="X-Inventory-Secret",required=false) String secret,
-                                        @RequestBody Map<String,Integer> quantities) {
+    public ResponseEntity<Void> reserve(@RequestHeader(value = "X-Inventory-Secret", required = false) String secret,
+            @RequestBody Map<String, Integer> quantities) {
         requireInternalSecret(secret);
         productService.changeStock(quantities, false);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/internal/restore")
-    public ResponseEntity<Void> restore(@RequestHeader(value="X-Inventory-Secret",required=false) String secret,
-                                        @RequestBody Map<String,Integer> quantities) {
+    public ResponseEntity<Void> restore(@RequestHeader(value = "X-Inventory-Secret", required = false) String secret,
+            @RequestBody Map<String, Integer> quantities) {
         requireInternalSecret(secret);
         productService.changeStock(quantities, true);
         return ResponseEntity.noContent().build();
     }
-
 
     @RequestMapping(method = RequestMethod.GET)
     public ResponseEntity<List<Product>> getProducts() {
         return ResponseEntity.ok(productService.getProducts());
     }
 
-    @RequestMapping(value="/{productId}", method = RequestMethod.GET)
+    @RequestMapping(value = "/{productId}", method = RequestMethod.GET)
     public ResponseEntity<Product> getProduct(@PathVariable("productId") String productId) {
         Product product = productService.getProduct(productId);
 
@@ -72,8 +71,8 @@ public class ProductController {
                 linkTo(methodOn(ProductController.class).getProduct(product.getProductId())).withSelfRel(),
                 linkTo(methodOn(ProductController.class).createProduct(product)).withRel("createProduct"),
                 linkTo(methodOn(ProductController.class).updateProduct(product)).withRel("updateProduct"),
-                linkTo(methodOn(ProductController.class).deleteProduct(product.getProductId())).withRel("deleteProduct")
-        );
+                linkTo(methodOn(ProductController.class).deleteProduct(product.getProductId()))
+                        .withRel("deleteProduct"));
 
         return ResponseEntity.ok(product);
     }
@@ -91,7 +90,7 @@ public class ProductController {
     }
 
     @PreAuthorize("hasAuthority('MANAGE_PRODUCTS')")
-    @DeleteMapping(value="/{productId}")
+    @DeleteMapping(value = "/{productId}")
     public ResponseEntity<String> deleteProduct(@PathVariable("productId") String productId) {
         return ResponseEntity.ok(productService.deleteProduct(productId));
     }

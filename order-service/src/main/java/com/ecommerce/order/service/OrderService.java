@@ -33,22 +33,28 @@ public class OrderService {
         boolean admin = hasAdmin(jwt);
         return getOrders().stream().filter(order -> admin || jwt.getSubject().equals(order.getCustomerId())).toList();
     }
+
     public CustomerOrder getFor(String id, org.springframework.security.oauth2.jwt.Jwt jwt) {
         CustomerOrder order = getOrder(id);
         if (!hasAdmin(jwt) && !jwt.getSubject().equals(order.getCustomerId()))
-            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN,"Not your order");
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.FORBIDDEN, "Not your order");
         return order;
     }
+
     public CustomerOrder createFor(CustomerOrder order, String token, org.springframework.security.oauth2.jwt.Jwt jwt) {
         order.setCustomerId(jwt.getSubject());
         String name = jwt.getClaimAsString("preferred_username");
         order.setCustomerName(name == null ? jwt.getSubject() : name);
         order.setStatus("NEW");
-        return createOrder(order,token);
+        return createOrder(order, token);
     }
+
     private boolean hasAdmin(org.springframework.security.oauth2.jwt.Jwt jwt) {
-        Object resources=jwt.getClaim("resource_access");
-        if (resources instanceof java.util.Map<?,?> clients && clients.get("ecommerce-project") instanceof java.util.Map<?,?> app && app.get("roles") instanceof java.util.Collection<?> roles)
+        Object resources = jwt.getClaim("resource_access");
+        if (resources instanceof java.util.Map<?, ?> clients
+                && clients.get("wyntermarket-project") instanceof java.util.Map<?, ?> app
+                && app.get("roles") instanceof java.util.Collection<?> roles)
             return roles.contains("MANAGE_ORDERS");
         return false;
     }
@@ -82,14 +88,17 @@ public class OrderService {
             order.setItems(new ArrayList<>());
         }
 
-        Map<String,Integer> requested = new HashMap<>();
+        Map<String, Integer> requested = new HashMap<>();
         for (OrderItem item : order.getItems()) {
             requested.merge(item.getProductId(), item.getQuantity() == null ? 0 : item.getQuantity(), Integer::sum);
 
-            if (item.getQuantity() == null || item.getQuantity() <= 0) throw new IllegalArgumentException("Quantity must be positive");
+            if (item.getQuantity() == null || item.getQuantity() <= 0)
+                throw new IllegalArgumentException("Quantity must be positive");
             ProductLookup.ProductDetails product = productLookup.get(item.getProductId(), bearerToken);
-            if (product == null || product.price() == null || product.quantity() == null || product.quantity() < item.getQuantity())
-                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "Product unavailable or insufficient stock");
+            if (product == null || product.price() == null || product.quantity() == null
+                    || product.quantity() < item.getQuantity())
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.CONFLICT, "Product unavailable or insufficient stock");
             item.setProductName(product.productName());
             item.setPrice(product.price());
             item.setOrderItemId(null);
@@ -103,8 +112,11 @@ public class OrderService {
             CustomerOrder savedOrder = orderRepository.saveAndFlush(order);
             return savedOrder.withComment(config.getProperty());
         } catch (RuntimeException error) {
-            try { productLookup.adjustStock(requested, true); }
-            catch (Exception compensationFailure) { error.addSuppressed(compensationFailure); }
+            try {
+                productLookup.adjustStock(requested, true);
+            } catch (Exception compensationFailure) {
+                error.addSuppressed(compensationFailure);
+            }
             throw error;
         }
     }
@@ -113,11 +125,11 @@ public class OrderService {
     public CustomerOrder changeStatus(String id, String status) {
         if (status == null || !java.util.Set.of("NEW", "PROCESSING", "SHIPPED", "DELIVERED").contains(status)) {
             throw new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid order status");
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid order status");
         }
-        CustomerOrder order = orderRepository.findById(id).orElseThrow(() ->
-            new org.springframework.web.server.ResponseStatusException(
-                org.springframework.http.HttpStatus.NOT_FOUND, "Order not found"));
+        CustomerOrder order = orderRepository.findById(id)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND, "Order not found"));
         order.setStatus(status);
         return orderRepository.save(order).withComment(config.getProperty());
     }

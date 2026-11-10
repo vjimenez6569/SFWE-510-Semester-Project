@@ -8,7 +8,8 @@ import lombok.Setter;
 
 @Configuration
 @ConfigurationProperties(prefix = "example")
-@Getter @Setter
+@Getter
+@Setter
 public class ServiceConfig {
 
     private String property;

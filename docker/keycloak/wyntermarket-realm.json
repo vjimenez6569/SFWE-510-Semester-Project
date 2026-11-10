@@ -1,10 +1,38 @@
+
 {
-  "realm": "ecommerce",
+  "realm": "wyntermarket",
   "enabled": true,
+  "displayName": "Wynter Market",
+  "displayNameHtml": "Wynter Market",
   "registrationAllowed": true,
   "resetPasswordAllowed": true,
+  "eventsEnabled": true,
+  "enabledEventTypes": [
+    "LOGIN",
+    "LOGIN_ERROR",
+    "REGISTER",
+    "REGISTER_ERROR",
+    "SEND_RESET_PASSWORD",
+    "SEND_RESET_PASSWORD_ERROR",
+    "RESET_PASSWORD",
+    "RESET_PASSWORD_ERROR"
+  ],
+  "eventsExpiration": 86400,
   "loginWithEmailAllowed": true,
   "verifyEmail": false,
+  "smtpServer": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "from": "wynter.marketplace@gmail.com",
+    "fromDisplayName": "Wynter Market",
+    "replyTo": "wynter.marketplace@gmail.com",
+    "replyToDisplayName": "Wynter Market Support",
+    "auth": "true",
+    "ssl": "false",
+    "starttls": "true",
+    "user": "wynter.marketplace@gmail.com",
+    "password": ""
+  },
   "roles": {
     "realm": [
       {
@@ -13,7 +41,7 @@
         "composite": true,
         "composites": {
           "client": {
-            "ecommerce-project": [
+            "wyntermarket-project": [
               "VIEW_PRODUCTS",
               "PLACE_ORDERS",
               "VIEW_OWN_ORDERS",
@@ -24,11 +52,11 @@
       },
       {
         "name": "ADMIN",
-        "description": "Ecommerce administrator",
+        "description": "Wynter Market Administrator",
         "composite": true,
         "composites": {
           "client": {
-            "ecommerce-project": [
+            "wyntermarket-project": [
               "MANAGE_PRODUCTS",
               "MANAGE_ORDERS",
               "MANAGE_CUSTOMERS"
@@ -38,7 +66,7 @@
       }
     ],
     "client": {
-      "ecommerce-project": [
+      "wyntermarket-project": [
         {
           "name": "VIEW_PRODUCTS"
         },
@@ -68,8 +96,8 @@
   ],
   "clients": [
     {
-      "clientId": "ecommerce-project",
-      "name": "Ecommerce Semester Project",
+      "clientId": "wyntermarket-project",
+      "name": "Wynter Market",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
@@ -92,7 +120,7 @@
     {
       "username": "demo-admin",
       "enabled": true,
-      "email": "admin@example.test",
+      "email": "vjimenezgranados@arizona.edu",
       "emailVerified": true,
       "firstName": "Demo",
       "lastName": "Admin",
